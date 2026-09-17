@@ -90,6 +90,51 @@ OPENAI_API_KEY=lmstudio MEM0_TELEMETRY=false ./pi_with_mem0/venv/bin/python step
 - **响应格式**：UnSloth 后端不接受 mem0 默认的 `{"type":"json_object"}`，已设为 `text`，让模型返回纯文本 JSON，由 mem0 parser 自带 `extract_json` fallback 解析。
 - **向量维度**：nomic embedder 实测返回 384 维，需与 Qdrant 配置一致，否则点积维度不匹配而报错。
 
+## 部署
+
+> ⚠️ **重要：本仓库只是「记忆后端」部分，必须先自行安装 pi-agent。**
+>
+> 本项目只负责把 mem0 记忆能力通过 MCP 暴露出来。要真正跑起带记忆的 pi，
+> 你需要先拥有自己的 **pi-agent（pi 框架本体）**，再让 pi 通过这个 MCP server 连接记忆。
+> 本仓库不包含 pi-agent，也不替你做 pi 的安装/初始化。
+
+部署链路：
+
+```
+pi-agent / pi-forge (需自行下载安装)
+   │  MCP stdio
+   ▼
+这个仓库：mem0_mcp_server.py  ← 本地模型后端 (UnSloth/LM Studio)
+```
+
+### 步骤
+
+1. **先安装 pi-agent（pi 框架本体）**
+   - 下载并安装好 pi-agent（本仓库不提供）。
+   - 确保你有一个可用的本地模型后端（UnSloth 或 LM Studio），
+     本仓库默认指向 `http://192.168.3.58:1234/v1`。
+
+2. **安装本仓库依赖**
+   ```bash
+   cd pi_with_mem0
+   python -m venv venv
+   source venv/bin/activate
+   pip install mem0ai fastmcp
+   ```
+
+3. **连接 MCP 服务**
+   - 以 stdio 方式启动 mem0 MCP server：
+     ```bash
+     ./pi_with_mem0/venv/bin/python mem0_mcp_server.py
+     ```
+   - 在 pi-agent 的配置里（如 `mcp.json`）登记该 server，
+     把 `LM_URL`/`LM_API_KEY` 等环境变量注入进去，pi 即可使用记忆工具。
+
+4. **验证**
+   - 跑 `./pi_with_mem0/venv/bin/python step2_mcp_end_to_end.py` 确认 MCP 端到端可用。
+
+> 提示：本地推理较慢，连接与记忆操作各需数十秒，请给足超时。
+
 ## 依赖
 
 - `mem0ai`（本地 SDK 位于仓库 `../mem0/mem0`）
