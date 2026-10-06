@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# pi-mem0 — 唤醒带 mem0 记忆的 pi agent（LLM 与 embedding 共用同一本地 LM Studio 模型）。
+#
+# 用法：
+#   pi-mem0 "给 agent 的提示..."                 # 用默认项目根（当前目录）
+#   PI_MEM0_PROJECT_ROOT=/path/to/pi-project pi-mem0 "提示..."
+#
+# 环境变量覆盖（可选）：
+#   PI_MEM0_PROJECT_ROOT  目标 pi 项目根（含 .pi/extensions/memory）   默认 $(pwd)
+#   PI_MEM0_PROVIDER_URL  LM Studio URL                              默认 http://localhost:1234/v1
+#   PI_MEM0_LLM_MODEL     LLM 模型名                                 默认 ornith-1.5-35b-a3b-apex-mtp-i-compact
+#   PI_MEM0_EMBED_MODEL   embedding 模型名                            默认 text-embedding-nomic-embed-text-v1.5
+#   PI_MEM0_CLI           pi CLI bundle 路径                         默认 ~/.local/bin/.../cli.js
+#   PI_MEM0_VENV_PYTHON   mem0 venv python（供 extension 内部使用）  默认 <项目根>/mem0_server/venv/bin/python
+#   PI_MEM0_MCP_SERVER_PY mem0 MCP server 路径                     默认 <项目根>/mem0_server/mem0_mcp_server.py
+#
+# -p 选用 lmstudio provider；--approve 信任本地文件（本运行）。如需免 --approve 唤醒，
+#   见 README「持久化项目信任」一节。
+set -euo pipefail
+
+PROJECT_ROOT="${PI_MEM0_PROJECT_ROOT:-$(pwd)}"
+cd "$PROJECT_ROOT"
+
+PROVIDER_URL="${PI_MEM0_PROVIDER_URL:-http://localhost:1234/v1}"
+LLM_MODEL="${PI_MEM0_LLM_MODEL:-ornith-1.5-35b-a3b-apex-mtp-i-compact}"
+EMBED_MODEL="${PI_MEM0_EMBED_MODEL:-text-embedding-nomic-embed-text-v1.5}"
+CLI="${PI_MEM0_CLI:-/root/.local/bin/lib/node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js}"
+
+# 这些变量由 extensions/memory/index.ts 和 mem0 server 共同读取。
+export LM_URL="$PROVIDER_URL"
+export LLM_MODEL
+export EMBED_MODEL
+
+echo "[pi-mem0] project root: $PROJECT_ROOT"
+echo "[pi-mem0] provider:     $PROVIDER_URL  (llm: $LLM_MODEL)"
+
+exec node "$CLI" \
+  --lmstudio-provider "$PROVIDER_URL" \
+  -p --approve "$@"
