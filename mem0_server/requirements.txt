@@ -1,0 +1,13 @@
+# mem0 MCP server 的 Python 依赖（在独立 venv 中安装，见 setup_venv.sh）。
+# 版本对齐已验证可用的工作 venv：mem0ai==2.0.20 / fastmcp==4.0.3。
+#
+# 说明：
+#   - mem0ai 从 PyPI 安装即可；若你手边有本地 clone（../mem0/mem0），step0/step1 会自动把它加进 sys.path。
+#   - fastmcp 4.x 读取 MCP params.arguments（非 parameters）——本项目的桥接已据此适配。
+
+mem0ai==2.0.20
+fastmcp==4.0.3
+qdrant-client==1.19.0
+uvicorn==0.53.0
+pydantic==2.13.5
+httpx==0.28.1
